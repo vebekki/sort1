@@ -1,0 +1,403 @@
+
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>쌐페스 소트</title>
+<style>
+*{box-sizing:border-box}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,
+  'Apple SD Gothic Neo',sans-serif;
+  margin:0;padding:24px 12px;
+  color:#222;background:white;
+}
+main{max-width:650px;margin:30px auto;text-align:center}
+h1{font-size:29px;margin:0 0 12px}
+p{font-size:14px;color:#777;line-height:1.7}
+button{
+  font:inherit;cursor:pointer;
+  border:1px solid #ccc;border-radius:9px;
+  background:#fff;color:#222;padding:12px 18px;
+}
+button:disabled{opacity:.35;cursor:default}
+.primary{
+  background:#222;color:#fff;
+  border-color:#222;font-weight:700;
+}
+#start button{margin-top:20px}
+[hidden]{display:none!important}
+.bar-bg{
+  height:10px;background:#eee;
+  border-radius:20px;overflow:hidden;margin:15px 0;
+}
+#bar{
+  height:100%;width:0;
+  background:#555;transition:width .2s;
+}
+.choices{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:12px;margin:27px 0 18px;
+}
+.choice{
+  min-height:150px;font-size:27px;font-weight:700;
+  background:#fafafa;border:2px solid #ddd;
+  overflow-wrap:anywhere;
+}
+.choice:active{background:#eee;border-color:#555}
+.actions{
+  display:flex;gap:10px;justify-content:center;
+  flex-wrap:wrap;margin:20px 0;
+}
+#ranking{margin:25px 0;text-align:left}
+.rank{
+  display:flex;gap:15px;padding:10px;
+  border-bottom:1px solid #eee;font-size:17px;
+}
+.rank b{width:55px;flex-shrink:0}
+#preview{
+  display:block;max-width:100%;
+  margin:20px auto;border:1px solid #ddd;
+}
+#saveLink{
+  display:inline-block;color:white;background:#222;
+  padding:12px 18px;border-radius:8px;
+  text-decoration:none;
+}
+@media(max-width:460px){
+  .choice{font-size:23px;min-height:130px}
+}
+</style>
+</head>
+<body>
+<main>
+<section id="start">
+  <h1>쌐페스 소트</h1>
+  <p>90개 조합 중 더 좋아하는 조합을 골라주세요.</p>
+  <button class="primary" id="startBtn">
+    소트 시작하기
+  </button>
+</section>
+
+<section id="game" hidden>
+  <h1>쌐페스 소트</h1>
+  <p id="progressText">진행률 0%</p>
+  <div class="bar-bg"><div id="bar"></div></div>
+
+  <div class="choices">
+    <button id="left" class="choice"></button>
+    <button id="right" class="choice"></button>
+  </div>
+
+  <div class="actions">
+    <button id="tie">무승부</button>
+    <button id="undo">이전 선택</button>
+  </div>
+</section>
+
+<section id="result" hidden>
+  <h1>쌐페스 소트 결과</h1>
+  <p id="resultInfo"></p>
+  <div id="ranking"></div>
+
+  <div class="actions">
+    <button id="imageBtn" class="primary">
+      결과 이미지 만들기
+    </button>
+    <button id="restart">다시 하기</button>
+  </div>
+
+  <div id="imageArea" hidden>
+    <p>아이폰에서는 아래 이미지를 길게 눌러 저장할 수 있어요.</p>
+    <img id="preview" alt="쌐페스 소트 결과">
+    <a id="saveLink" download="쌐페스_소트_결과.png">
+      PNG 저장
+    </a>
+  </div>
+</section>
+</main>
+
+<script>
+const names=`믠눚 믠슘 믠함 믠온 맺쪙 믠센 째늊 믠헡 맺찬
+눚째 눚슘 쭘식 눚혅 눚쪙 눚센 쭘늊 눚헡 눚찬
+슘째 슘눚 슘함 슘혅 슘쪙 슘센 슘늊 슘헡 뭇찬
+식믠 식쭘 식슘 식혅 함쪙 함센 함늊 식헡 눈챤
+온믠 현눚 온슘 온식 온쪙 온섄 우늊 혅헡 온옟
+쪙믠 쪙눚 쪙슘 쪙식 쪙혅 쪙센 쪙윶 쪙헡 쪙찬
+센믠 센쭘 센슘 센함 센혅 센쪙 섄윶 센헡 섄찬
+늊믠 늊쭘 윶슘 늊식 윶온 늊쪙 늊센 늊헡 늊찬
+헡믠 헡눚 헡슘 헡함 헡온 헡쪙 헡센 터윶 헡찬
+옟믠 옟눚 찬뭇 옟식 옟혅 옟쪙 찬섄 찬윶 찬헡`
+.trim().split(/\s+/);
+
+const $=id=>document.getElementById(id);
+const key='ssakpes-sort-final-v2';
+let state=null,history=[];
+
+function shuffle(a){
+  a=[...a];
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function save(){
+  try{
+    localStorage.setItem(key,JSON.stringify(state));
+  }catch(e){}
+}
+
+function start(){
+  state={
+    runs:shuffle(names).map(n=>[[n]]),
+    next:[],
+    index:0,
+    merge:null,
+    round:0,
+    clicks:0,
+    done:false
+  };
+  history=[];
+  advance();
+  save();
+  render();
+}
+
+function advance(){
+  while(!state.done){
+    if(state.merge){
+      const m=state.merge;
+
+      if(m.i<m.a.length&&m.j<m.b.length)return;
+
+      m.out.push(
+        ...m.a.slice(m.i),
+        ...m.b.slice(m.j)
+      );
+
+      state.next.push(m.out);
+      state.merge=null;
+      state.index+=2;
+      continue;
+    }
+
+    if(state.index>=state.runs.length){
+      if(state.next.length===1){
+        state.runs=state.next;
+        state.next=[];
+        state.done=true;
+        return;
+      }
+
+      state.runs=state.next;
+      state.next=[];
+      state.index=0;
+      state.round++;
+      continue;
+    }
+
+    if(state.index===state.runs.length-1){
+      state.next.push(state.runs[state.index]);
+      state.index++;
+      continue;
+    }
+
+    state.merge={
+      a:state.runs[state.index],
+      b:state.runs[state.index+1],
+      i:0,
+      j:0,
+      out:[]
+    };
+  }
+}
+
+function choose(side){
+  if(!state||state.done||!state.merge)return;
+
+  history.push(JSON.stringify(state));
+  const m=state.merge;
+
+  if(side==='left'){
+    m.out.push(m.a[m.i++]);
+  }
+
+  if(side==='right'){
+    m.out.push(m.b[m.j++]);
+  }
+
+  if(side==='tie'){
+    m.out.push([
+      ...m.a[m.i++],
+      ...m.b[m.j++]
+    ]);
+  }
+
+  state.clicks++;
+  advance();
+  save();
+  render();
+}
+
+function undo(){
+  if(!history.length)return;
+  state=JSON.parse(history.pop());
+  save();
+  render();
+}
+
+function progress(){
+  if(state.done)return 100;
+
+  let done=state.next.reduce(
+    (n,run)=>n+run.reduce(
+      (s,g)=>s+g.length,0
+    ),0
+  );
+
+  if(state.merge){
+    done+=state.merge.out.reduce(
+      (n,g)=>n+g.length,0
+    );
+  }
+
+  return Math.min(99,Math.max(0,Math.round(
+    100*(state.round+done/names.length)/
+    Math.ceil(Math.log2(names.length))
+  )));
+}
+
+function ranked(){
+  let rank=1;
+  const rows=[];
+
+  for(const group of state.runs[0]){
+    for(const name of group){
+      rows.push({rank,name});
+    }
+    rank+=group.length;
+  }
+
+  return rows;
+}
+
+function render(){
+  $('start').hidden=!!state;
+  $('game').hidden=!state||state.done;
+  $('result').hidden=!state||!state.done;
+
+  if(!state)return;
+
+  if(state.done){
+    $('resultInfo').textContent=
+      state.clicks+'번의 선택으로 완성된 순위';
+
+    $('ranking').replaceChildren();
+
+    ranked().forEach(({rank,name})=>{
+      const d=document.createElement('div');
+      d.className='rank';
+
+      const b=document.createElement('b');
+      b.textContent=rank+'위';
+
+      const s=document.createElement('span');
+      s.textContent=name;
+
+      d.append(b,s);
+      $('ranking').append(d);
+    });
+  }else{
+    const m=state.merge;
+
+    $('left').textContent=m.a[m.i].join(' / ');
+    $('right').textContent=m.b[m.j].join(' / ');
+
+    const p=progress();
+
+    $('progressText').textContent=
+      '진행률 '+p+'% · '+state.clicks+'번 선택';
+
+    $('bar').style.width=p+'%';
+    $('undo').disabled=!history.length;
+  }
+}
+
+function makeImage(){
+  if(!state||!state.done)return;
+
+  const rows=ranked();
+  const canvas=document.createElement('canvas');
+
+  canvas.width=800;
+  canvas.height=145+rows.length*45+35;
+
+  const c=canvas.getContext('2d');
+
+  c.fillStyle='#fff';
+  c.fillRect(0,0,canvas.width,canvas.height);
+
+  c.fillStyle='#222';
+  c.font='bold 36px sans-serif';
+  c.fillText('쌐페스 소트',45,62);
+
+  c.font='18px sans-serif';
+  c.fillStyle='#777';
+  c.fillText('90개 조합 최종 결과',45,102);
+
+  rows.forEach(({rank,name},i)=>{
+    const y=145+i*45;
+
+    if(i%2===0){
+      c.fillStyle='#f4f4f4';
+      c.fillRect(32,y-29,736,42);
+    }
+
+    c.fillStyle='#222';
+    c.font='bold 20px sans-serif';
+    c.fillText(rank+'위',48,y);
+
+    c.font='20px sans-serif';
+    c.fillText(name,130,y);
+  });
+
+  const url=canvas.toDataURL('image/png');
+
+  $('preview').src=url;
+  $('saveLink').href=url;
+  $('imageArea').hidden=false;
+}
+
+$('startBtn').onclick=start;
+$('left').onclick=()=>choose('left');
+$('right').onclick=()=>choose('right');
+$('tie').onclick=()=>choose('tie');
+$('undo').onclick=undo;
+
+$('restart').onclick=()=>{
+  $('imageArea').hidden=true;
+  start();
+};
+
+$('imageBtn').onclick=makeImage;
+
+try{
+  const old=JSON.parse(localStorage.getItem(key));
+
+  if(
+    old&&
+    Array.isArray(old.runs)&&
+    typeof old.done==='boolean'
+  ){
+    state=old;
+    advance();
+  }
+}catch(e){}
+
+render();
+</script>
+</body>
+</html>
