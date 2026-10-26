@@ -7,67 +7,33 @@
 <title>쌐페스 소트</title>
 <style>
 *{box-sizing:border-box}
-body{
-  font-family:-apple-system,BlinkMacSystemFont,
-  'Apple SD Gothic Neo',sans-serif;
-  margin:0;padding:24px 12px;
-  color:#222;background:white;
-}
+body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;margin:0;padding:24px 12px;background:#fff;color:#222}
 main{max-width:650px;margin:30px auto;text-align:center}
 h1{font-size:29px;margin:0 0 12px}
-p{font-size:14px;color:#777;line-height:1.7}
-button{
-  font:inherit;cursor:pointer;
-  border:1px solid #ccc;border-radius:9px;
-  background:#fff;color:#222;padding:12px 18px;
-}
-button:disabled{opacity:.35;cursor:default}
-.primary{
-  background:#222;color:#fff;
-  border-color:#222;font-weight:700;
-}
-#start button{margin-top:20px}
+p{font-size:14px;line-height:1.7;color:#777}
+button{font:inherit;cursor:pointer;border:1px solid #ccc;border-radius:9px;background:#fff;color:#222;padding:12px 18px}
+button:disabled{opacity:.4;cursor:default}
+.primary{background:#222;color:white;border-color:#222;font-weight:700}
 [hidden]{display:none!important}
-.bar-bg{
-  height:10px;background:#eee;
-  border-radius:20px;overflow:hidden;margin:15px 0;
-}
-#bar{
-  height:100%;width:0;
-  background:#555;transition:width .2s;
-}
-.choices{
-  display:grid;grid-template-columns:1fr 1fr;
-  gap:12px;margin:27px 0 18px;
-}
-.choice{
-  min-height:150px;font-size:27px;font-weight:700;
-  background:#fafafa;border:2px solid #ddd;
-  overflow-wrap:anywhere;
-}
-.choice:active{background:#eee;border-color:#555}
-.actions{
-  display:flex;gap:10px;justify-content:center;
-  flex-wrap:wrap;margin:20px 0;
-}
-#ranking{margin:25px 0;text-align:left}
-.rank{
-  display:flex;gap:15px;padding:10px;
-  border-bottom:1px solid #eee;font-size:17px;
-}
+.bar-bg{height:10px;background:#eee;border-radius:20px;overflow:hidden;margin:15px 0}
+#bar{height:100%;width:0;background:#555;transition:width .2s}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:27px 0 18px}
+.choice{min-height:150px;font-size:27px;font-weight:700;background:#fafafa;border:2px solid #ddd;overflow-wrap:anywhere}
+.choice:active{background:#eee}
+.actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:20px 0}
+.rank{display:flex;gap:15px;padding:10px;border-bottom:1px solid #eee;text-align:left;font-size:17px}
 .rank b{width:55px;flex-shrink:0}
-#preview{
-  display:block;max-width:100%;
-  margin:20px auto;border:1px solid #ddd;
-}
-#saveLink{
-  display:inline-block;color:white;background:#222;
-  padding:12px 18px;border-radius:8px;
-  text-decoration:none;
-}
-@media(max-width:460px){
-  .choice{font-size:23px;min-height:130px}
-}
+.status{font-size:13px;margin:14px auto;max-width:510px}
+#preview{display:block;max-width:100%;margin:20px auto;border:1px solid #ddd}
+#saveLink{display:inline-block;padding:12px 18px;background:#222;color:white;border-radius:8px;text-decoration:none}
+.stat-total{padding:15px;margin:14px 0;font-size:18px;font-weight:700;border:1px solid #eee;border-radius:8px}
+.stat-row{text-align:left;padding:13px 3px;border-bottom:1px solid #eee}
+.stat-head{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:15px}
+.stat-bar{height:8px;background:#eee;border-radius:8px;overflow:hidden;margin:8px 0}
+.stat-bar div{height:100%;background:#555;border-radius:8px}
+.stat-row small{color:#777;font-size:12px}
+.hint{color:#888;font-size:12px}
+@media(max-width:460px){.choice{font-size:23px;min-height:130px}.stat-head{font-size:13px}}
 </style>
 </head>
 <body>
@@ -75,65 +41,74 @@ button:disabled{opacity:.35;cursor:default}
 <section id="start">
   <h1>쌐페스 소트</h1>
   <p>90개 조합 중 더 좋아하는 조합을 골라주세요.</p>
-  <button class="primary" id="startBtn">
-    소트 시작하기
-  </button>
+  <div class="actions">
+    <button id="startBtn" class="primary">소트 시작하기</button>
+    <button id="startStats">전체 인기 순위</button>
+  </div>
 </section>
-
 <section id="game" hidden>
   <h1>쌐페스 소트</h1>
   <p id="progressText">진행률 0%</p>
   <div class="bar-bg"><div id="bar"></div></div>
-
   <div class="choices">
     <button id="left" class="choice"></button>
     <button id="right" class="choice"></button>
   </div>
-
   <div class="actions">
     <button id="tie">무승부</button>
     <button id="undo">이전 선택</button>
   </div>
 </section>
-
 <section id="result" hidden>
   <h1>쌐페스 소트 결과</h1>
   <p id="resultInfo"></p>
   <div id="ranking"></div>
-
+  <p id="submitStatus" class="status" role="status" aria-live="polite"></p>
+  <button id="retrySubmit" hidden>결과 전송 다시 시도</button>
   <div class="actions">
-    <button id="imageBtn" class="primary">
-      결과 이미지 만들기
-    </button>
+    <button id="imageBtn" class="primary">결과 이미지 만들기</button>
+    <button id="resultStats">전체 인기 순위</button>
     <button id="restart">다시 하기</button>
   </div>
-
   <div id="imageArea" hidden>
-    <p>아이폰에서는 아래 이미지를 길게 눌러 저장할 수 있어요.</p>
-    <img id="preview" alt="쌐페스 소트 결과">
-    <a id="saveLink" download="쌐페스_소트_결과.png">
-      PNG 저장
-    </a>
+    <p>아이폰에서는 이미지를 길게 눌러 저장할 수 있어요.</p>
+    <img id="preview" alt="쌐페스 소트 결과 이미지">
+    <a id="saveLink" download="쌐페스_소트_결과.png">PNG 저장</a>
+  </div>
+</section>
+<section id="stats" hidden>
+  <h1>쌐페스 소트 · 누적 순위</h1>
+  <p class="hint">완료 후 정상 전송된 첫 참여 결과를 기준으로 집계합니다.</p>
+  <div id="statsTotal" class="stat-total">통계 불러오는 중…</div>
+  <div id="statsList"></div>
+  <p id="statsStatus" class="status" role="status" aria-live="polite"></p>
+  <p class="hint">공동 1위도 1위 선택에 포함돼요. 평균 순위는 낮을수록 좋아요.</p>
+  <div class="actions">
+    <button id="refreshStats">새로고침</button>
+    <button id="backStats" class="primary">돌아가기</button>
   </div>
 </section>
 </main>
-
 <script>
-const names=`믠눚 믠슘 믠함 믠온 맺쪙 믠센 째늊 믠헡 맺찬
-눚째 눚슘 쭘식 눚혅 눚쪙 눚센 쭘늊 눚헡 눚찬
-슘째 슘눚 슘함 슘혅 슘쪙 슘센 슘늊 슘헡 뭇찬
-식믠 식쭘 식슘 식혅 함쪙 함센 함늊 식헡 눈챤
-온믠 현눚 온슘 온식 온쪙 온섄 우늊 혅헡 온옟
-쪙믠 쪙눚 쪙슘 쪙식 쪙혅 쪙센 쪙윶 쪙헡 쪙찬
-센믠 센쭘 센슘 센함 센혅 센쪙 섄윶 센헡 섄찬
-늊믠 늊쭘 윶슘 늊식 윶온 늊쪙 늊센 늊헡 늊찬
-헡믠 헡눚 헡슘 헡함 헡온 헡쪙 헡센 터윶 헡찬
-옟믠 옟눚 찬뭇 옟식 옟혅 옟쪙 찬섄 찬윶 찬헡`
-.trim().split(/\s+/);
-
+const SUPABASE_URL='https://zqxwqnwmculcdlxfaocj.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_qizqA7UJAoyQX5304U-f1Q_VJaAOq9M';
+const names=[
+"믠눚","믠슘","믠함","믠온","맺쪙","믠센","째늊","믠헡","맺찬",
+"눚째","눚슘","쭘식","눚혅","눚쪙","눚센","쭘늊","눚헡","눚찬",
+"슘째","슘눚","슘함","슘혅","슘쪙","슘센","슘늊","슘헡","뭇찬",
+"식믠","식쭘","식슘","식혅","함쪙","함센","함늊","식헡","눈챤",
+"온믠","현눚","온슘","온식","온쪙","온섄","우늊","혅헡","온옟",
+"쪙믠","쪙눚","쪙슘","쪙식","쪙혅","쪙센","쪙윶","쪙헡","쪙찬",
+"센믠","센쭘","센슘","센함","센혅","센쪙","섄윶","센헡","섄찬",
+"늊믠","늊쭘","윶슘","늊식","윶온","늊쪙","늊센","늊헡","늊찬",
+"헡믠","헡눚","헡슘","헡함","헡온","헡쪙","헡센","터윶","헡찬",
+"옟믠","옟눚","찬뭇","옟식","옟혅","옟쪙","찬섄","찬윶","찬헡"
+];
 const $=id=>document.getElementById(id);
-const key='ssakpes-sort-final-v2';
-let state=null,history=[];
+const storageKey='ssakpes-pair90-stats-game-v1';
+const voterKey='ssakpes-pair90-stats-voter-v1';
+const submittedKey='ssakpes-pair90-stats-submitted-v1';
+let state=null,history=[],screen='start',backScreen='start',uploading=false;
 
 function shuffle(a){
   a=[...a];
@@ -143,261 +118,207 @@ function shuffle(a){
   }
   return a;
 }
-
-function save(){
+function persist(){
+  try{localStorage.setItem(storageKey,JSON.stringify({state,history}));}catch(e){}
+}
+function load(){
   try{
-    localStorage.setItem(key,JSON.stringify(state));
+    const obj=JSON.parse(localStorage.getItem(storageKey));
+    if(obj && obj.state && Array.isArray(obj.state.runs) && typeof obj.state.done==='boolean'){
+      state=obj.state;
+      history=Array.isArray(obj.history)?obj.history:[];
+      advance();
+      screen=state.done?'result':'game';
+    }
   }catch(e){}
 }
-
 function start(){
-  state={
-    runs:shuffle(names).map(n=>[[n]]),
-    next:[],
-    index:0,
-    merge:null,
-    round:0,
-    clicks:0,
-    done:false
-  };
+  state={runs:shuffle(names).map(n=>[[n]]),next:[],index:0,merge:null,round:0,clicks:0,done:false};
   history=[];
-  advance();
-  save();
-  render();
+  $('imageArea').hidden=true;
+  advance();persist();screen='game';render();
 }
-
 function advance(){
-  while(!state.done){
+  let guard=0;
+  while(!state.done && guard++<1000){
     if(state.merge){
       const m=state.merge;
-
-      if(m.i<m.a.length&&m.j<m.b.length)return;
-
-      m.out.push(
-        ...m.a.slice(m.i),
-        ...m.b.slice(m.j)
-      );
-
+      if(m.i<m.a.length && m.j<m.b.length)return;
+      m.out.push(...m.a.slice(m.i),...m.b.slice(m.j));
       state.next.push(m.out);
-      state.merge=null;
-      state.index+=2;
+      state.merge=null;state.index+=2;
       continue;
     }
-
     if(state.index>=state.runs.length){
       if(state.next.length===1){
-        state.runs=state.next;
-        state.next=[];
-        state.done=true;
-        return;
+        state.runs=state.next;state.next=[];state.done=true;return;
       }
-
-      state.runs=state.next;
-      state.next=[];
-      state.index=0;
-      state.round++;
+      state.runs=state.next;state.next=[];state.index=0;state.round++;
       continue;
     }
-
     if(state.index===state.runs.length-1){
-      state.next.push(state.runs[state.index]);
-      state.index++;
-      continue;
+      state.next.push(state.runs[state.index]);state.index++;continue;
     }
-
-    state.merge={
-      a:state.runs[state.index],
-      b:state.runs[state.index+1],
-      i:0,
-      j:0,
-      out:[]
-    };
+    state.merge={a:state.runs[state.index],b:state.runs[state.index+1],i:0,j:0,out:[]};
   }
 }
-
 function choose(side){
-  if(!state||state.done||!state.merge)return;
-
+  if(!state || state.done || !state.merge)return;
   history.push(JSON.stringify(state));
   const m=state.merge;
-
-  if(side==='left'){
-    m.out.push(m.a[m.i++]);
-  }
-
-  if(side==='right'){
-    m.out.push(m.b[m.j++]);
-  }
-
-  if(side==='tie'){
-    m.out.push([
-      ...m.a[m.i++],
-      ...m.b[m.j++]
-    ]);
-  }
-
-  state.clicks++;
-  advance();
-  save();
-  render();
+  if(side==='left')m.out.push(m.a[m.i++]);
+  if(side==='right')m.out.push(m.b[m.j++]);
+  if(side==='tie')m.out.push([...m.a[m.i++],...m.b[m.j++]]);
+  state.clicks++;advance();persist();
+  screen=state.done?'result':'game';render();
 }
-
 function undo(){
   if(!history.length)return;
-  state=JSON.parse(history.pop());
-  save();
-  render();
+  state=JSON.parse(history.pop());persist();screen='game';render();
 }
-
 function progress(){
   if(state.done)return 100;
-
-  let done=state.next.reduce(
-    (n,run)=>n+run.reduce(
-      (s,g)=>s+g.length,0
-    ),0
-  );
-
-  if(state.merge){
-    done+=state.merge.out.reduce(
-      (n,g)=>n+g.length,0
-    );
-  }
-
-  return Math.min(99,Math.max(0,Math.round(
-    100*(state.round+done/names.length)/
-    Math.ceil(Math.log2(names.length))
-  )));
+  let processed=state.next.reduce((n,run)=>n+run.reduce((s,g)=>s+g.length,0),0);
+  if(state.merge)processed+=state.merge.out.reduce((n,g)=>n+g.length,0);
+  return Math.max(0,Math.min(99,Math.round(100*(state.round+processed/names.length)/Math.ceil(Math.log2(names.length)))));
 }
-
 function ranked(){
-  let rank=1;
-  const rows=[];
-
+  const rows=[];let rank=1;
   for(const group of state.runs[0]){
-    for(const name of group){
-      rows.push({rank,name});
-    }
+    for(const name of group)rows.push({rank,name});
     rank+=group.length;
   }
-
   return rows;
 }
-
 function render(){
-  $('start').hidden=!!state;
-  $('game').hidden=!state||state.done;
-  $('result').hidden=!state||!state.done;
-
+  for(const id of ['start','game','result','stats'])$(id).hidden=id!==screen;
   if(!state)return;
-
-  if(state.done){
-    $('resultInfo').textContent=
-      state.clicks+'번의 선택으로 완성된 순위';
-
-    $('ranking').replaceChildren();
-
-    ranked().forEach(({rank,name})=>{
-      const d=document.createElement('div');
-      d.className='rank';
-
-      const b=document.createElement('b');
-      b.textContent=rank+'위';
-
-      const s=document.createElement('span');
-      s.textContent=name;
-
-      d.append(b,s);
-      $('ranking').append(d);
-    });
-  }else{
+  if(screen==='game'){
     const m=state.merge;
-
     $('left').textContent=m.a[m.i].join(' / ');
     $('right').textContent=m.b[m.j].join(' / ');
-
-    const p=progress();
-
-    $('progressText').textContent=
-      '진행률 '+p+'% · '+state.clicks+'번 선택';
-
-    $('bar').style.width=p+'%';
     $('undo').disabled=!history.length;
+    const p=progress();
+    $('progressText').textContent='진행률 '+p+'% · '+state.clicks+'번 선택';
+    $('bar').style.width=p+'%';
+  }
+  if(screen==='result'){
+    $('resultInfo').textContent=state.clicks+'번의 선택으로 완성된 순위';
+    $('ranking').replaceChildren();
+    for(const {rank,name} of ranked()){
+      const row=document.createElement('div');row.className='rank';
+      const a=document.createElement('b');a.textContent=rank+'위';
+      const b=document.createElement('span');b.textContent=name;
+      row.append(a,b);$('ranking').append(row);
+    }
+    void submitResult();
   }
 }
-
+function votingRanks(){
+  const ranks=Object.fromEntries(ranked().map(row=>[row.name,row.rank]));
+  return names.map(n=>ranks[n]);
+}
+function voterId(){
+  let id=localStorage.getItem(voterKey);
+  if(!id){id=crypto.randomUUID();localStorage.setItem(voterKey,id);}
+  return id;
+}
+function updateStatus(s,retry=false){
+  $('submitStatus').textContent=s;$('retrySubmit').hidden=!retry;
+}
+async function submitResult(){
+  if(!state || !state.done || uploading)return;
+  if(localStorage.getItem(submittedKey)==='yes'){
+    updateStatus('이 브라우저의 첫 완료 결과가 이미 통계에 반영되었어요.');return;
+  }
+  uploading=true;updateStatus('결과를 자동 저장하는 중…');
+  try{
+    const response=await fetch(SUPABASE_URL+'/rest/v1/pair_sort_votes',{
+      method:'POST',
+      headers:{apikey:SUPABASE_PUBLISHABLE_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},
+      body:JSON.stringify({voter_id:voterId(),ranks:votingRanks()})
+    });
+    if(!response.ok){
+      const data=await response.json().catch(()=>({}));
+      if(response.status===409 && data.code==='23505'){
+        localStorage.setItem(submittedKey,'yes');
+        updateStatus('이 브라우저의 첫 완료 결과가 이미 통계에 반영되었어요.');return;
+      }
+      throw Error(data.message || 'HTTP '+response.status);
+    }
+    localStorage.setItem(submittedKey,'yes');
+    updateStatus('결과가 전체 인기 순위에 저장되었어요!');
+  }catch(e){updateStatus('전송에 실패했어요. 연결을 확인하고 다시 시도해 주세요. ('+e.message+')',true);}
+  finally{uploading=false;}
+}
+function openStats(){
+  backScreen=screen;screen='stats';render();void refreshStats();
+}
+async function refreshStats(){
+  $('statsTotal').textContent='통계 불러오는 중…';
+  $('statsList').replaceChildren();$('statsStatus').textContent='';
+  try{
+    const response=await fetch(SUPABASE_URL+'/rest/v1/rpc/pair_sort_stats',{
+      method:'POST',
+      headers:{apikey:SUPABASE_PUBLISHABLE_KEY,'Content-Type':'application/json'},body:'{}'
+    });
+    if(!response.ok)throw Error('HTTP '+response.status);
+    const stats=await response.json();
+    if(!Array.isArray(stats)||stats.length!==90)throw Error('통계 응답 오류');
+    const total=Number(stats[0].participants)||0;
+    $('statsTotal').textContent='총 참가자 '+total.toLocaleString('ko-KR')+'명';
+    for(let i=0;i<stats.length;i++){
+      const s=stats[i];
+      const pct=Math.min(100,Math.max(0,Number(s.first_rate)||0));
+      const avg=s.average_rank==null?'—':Number(s.average_rank).toFixed(2)+'위';
+      const row=document.createElement('div');row.className='stat-row';
+      const h=document.createElement('div');h.className='stat-head';
+      const n=document.createElement('b');n.textContent=(i+1)+'위  '+s.name;
+      const p=document.createElement('span');p.textContent='1위 선택률 '+pct.toFixed(1)+'%';
+      h.append(n,p);
+      const bar=document.createElement('div');bar.className='stat-bar';
+      const fill=document.createElement('div');fill.style.width=pct+'%';bar.append(fill);
+      const detail=document.createElement('small');
+      detail.textContent='평균 순위 '+avg+' · 1위 선택 '+Number(s.first_count)+'회';
+      row.append(h,bar,detail);$('statsList').append(row);
+    }
+    if(total===0)$('statsStatus').textContent='아직 집계된 결과가 없어요.';
+  }catch(e){
+    $('statsTotal').textContent='통계를 불러오지 못했어요.';
+    $('statsStatus').textContent='인터넷 연결을 확인한 뒤 다시 시도해 주세요. ('+e.message+')';
+  }
+}
 function makeImage(){
-  if(!state||!state.done)return;
-
+  if(!state || !state.done)return;
   const rows=ranked();
   const canvas=document.createElement('canvas');
-
-  canvas.width=800;
-  canvas.height=145+rows.length*45+35;
-
+  canvas.width=800;canvas.height=145+rows.length*45+35;
   const c=canvas.getContext('2d');
-
-  c.fillStyle='#fff';
-  c.fillRect(0,0,canvas.width,canvas.height);
-
-  c.fillStyle='#222';
-  c.font='bold 36px sans-serif';
-  c.fillText('쌐페스 소트',45,62);
-
-  c.font='18px sans-serif';
-  c.fillStyle='#777';
-  c.fillText('90개 조합 최종 결과',45,102);
-
-  rows.forEach(({rank,name},i)=>{
-    const y=145+i*45;
-
-    if(i%2===0){
-      c.fillStyle='#f4f4f4';
-      c.fillRect(32,y-29,736,42);
-    }
-
-    c.fillStyle='#222';
-    c.font='bold 20px sans-serif';
-    c.fillText(rank+'위',48,y);
-
-    c.font='20px sans-serif';
-    c.fillText(name,130,y);
-  });
-
+  c.fillStyle='#fff';c.fillRect(0,0,canvas.width,canvas.height);
+  c.fillStyle='#222';c.font='bold 36px sans-serif';c.fillText('쌐페스 소트',45,62);
+  c.font='18px sans-serif';c.fillStyle='#777';c.fillText('90개 조합 최종 결과',45,102);
+  for(let i=0;i<rows.length;i++){
+    const {rank,name}=rows[i],y=145+i*45;
+    if(i%2===0){c.fillStyle='#f4f4f4';c.fillRect(32,y-29,736,42);}
+    c.fillStyle='#222';c.font='bold 20px sans-serif';c.fillText(rank+'위',48,y);
+    c.font='20px sans-serif';c.fillText(name,130,y);
+  }
   const url=canvas.toDataURL('image/png');
-
-  $('preview').src=url;
-  $('saveLink').href=url;
-  $('imageArea').hidden=false;
+  $('preview').src=url;$('saveLink').href=url;$('imageArea').hidden=false;
 }
-
 $('startBtn').onclick=start;
+$('startStats').onclick=openStats;
 $('left').onclick=()=>choose('left');
 $('right').onclick=()=>choose('right');
 $('tie').onclick=()=>choose('tie');
 $('undo').onclick=undo;
-
-$('restart').onclick=()=>{
-  $('imageArea').hidden=true;
-  start();
-};
-
+$('restart').onclick=start;
 $('imageBtn').onclick=makeImage;
-
-try{
-  const old=JSON.parse(localStorage.getItem(key));
-
-  if(
-    old&&
-    Array.isArray(old.runs)&&
-    typeof old.done==='boolean'
-  ){
-    state=old;
-    advance();
-  }
-}catch(e){}
-
-render();
+$('resultStats').onclick=openStats;
+$('retrySubmit').onclick=()=>void submitResult();
+$('refreshStats').onclick=()=>void refreshStats();
+$('backStats').onclick=()=>{screen=backScreen;render();};
+load();render();
 </script>
 </body>
 </html>
